@@ -24,8 +24,12 @@ if hmac ~= signature then
     ngx.exit(ngx.HTTP_FORBIDDEN)
 end
 
-local handle = io.popen("git -C /data pull")
-local result = handle:read("*a")
-handle:close()
+local ngx_pipe = require "ngx.pipe"
+local proc, err = ngx_pipe.spawn({"git", "-C", "/data", "pull"})
+if not proc then
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    ngx.say(err)
+    return
+end
 
-ngx.say(result)
+ngx.say("successfully spawned")
